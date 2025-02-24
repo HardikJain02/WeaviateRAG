@@ -1,7 +1,7 @@
 openai
 weaviate-client>=4.0.0
 gradio
-docling=2.24.0
+docling==2.24.0
 python-dotenv
 langchain
 tiktoken
