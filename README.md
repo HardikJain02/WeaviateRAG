@@ -172,7 +172,7 @@ Core dependencies:
 - `openai` - OpenAI API client
 - `weaviate-client>=4.0.0` - Weaviate vector database client
 - `gradio` - Web UI framework
-- `docling~=2.7.0` - Document processing
+- `docling=2.24.0` - Document processing
 - `python-dotenv` - Environment management
 - `langchain` - LLM framework
 - `tiktoken` - OpenAI tokenizer
@@ -190,7 +190,9 @@ weaviaterag/
 ├── conversation_store.py  # Chat history management
 ├── requirements.txt      # Project dependencies
 ├── .env                 # Environment variables
+├── chunks/              # chunks fo docs for debugging
 └── documents/           # Document storage directory
+
 ```
 
 ## Performance Considerations
