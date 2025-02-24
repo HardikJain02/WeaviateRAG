@@ -52,7 +52,7 @@ conda activate weaviaterag
 
 2. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/HardikJain02/WeaviateRAG.git
 cd weaviaterag
 ```
 
