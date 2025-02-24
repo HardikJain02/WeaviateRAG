@@ -388,6 +388,5 @@ The Code Executor is a powerful feature that provides intelligent JSON analysis 
 
 - I can easily host it on any virtual machine- but i do not have availability.
 - Automation: Monitors for new document uploads- this can be easily done but in my case when user hits process files i know i gotta upload right away- but when we are using s3 bucket/gcs bucket, we can setup a watcher for new folder/file or can directly trigger just like i did.
--Reranker can be added to the retrieved chunks to improve the quality of the final results.
-
-For any queries, feel free to reach out to me at jainh445@gmail.com
+- Reranker can be added to the retrieved chunks to improve the quality of the final results.
+- For any queries, feel free to reach out to me at jainh445@gmail.com
