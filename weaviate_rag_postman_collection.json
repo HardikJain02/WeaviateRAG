@@ -1,0 +1,781 @@
+{
+	"info": {
+		"_postman_id": "735fe46a-6452-4bdd-9fa9-39499b6b2955",
+		"name": "Weaviate RAG API Collection",
+		"description": "Collection of API endpoints for the Weaviate RAG application",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37684117",
+		"_collection_link": "https://foyr77.postman.co/workspace/foyr-Workspace~c297ea0c-8521-4a54-a603-57ac9866fd6f/collection/37684117-735fe46a-6452-4bdd-9fa9-39499b6b2955?action=share&source=collection_link&creator=37684117"
+	},
+	"item": [
+		{
+			"name": "Document Management",
+			"item": [
+				{
+					"name": "Get All Documents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:7860/api/documents",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7860",
+							"path": [
+								"api",
+								"documents"
+							]
+						},
+						"description": "Retrieve a list of all ingested documents"
+					},
+					"response": [
+						{
+							"name": "example",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:7860/api/documents",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7860",
+									"path": [
+										"api",
+										"documents"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 23 Feb 2025 22:24:39 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "437"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"documents\": [\n        {\n            \"filename\": \"sample.json\",\n            \"documentId\": \"46509da3-a01a-4860-a944-7d9f4ed26c33\",\n            \"weaviate_id\": \"f11172c7-f60c-472d-afe7-e3efc61fe5b4\"\n        },\n        {\n            \"filename\": \"Receipt-2028-2159.pdf\",\n            \"documentId\": \"ba22fb3e-938a-4952-9841-7a7612564da7\",\n            \"weaviate_id\": \"a7f805e1-0954-4bb0-a5f5-a7202531c87c\"\n        },\n        {\n            \"filename\": \"TechNote and Diligence.docx\",\n            \"documentId\": \"6c908ad9-cf1a-4af0-94fe-906fe9a55fed\",\n            \"weaviate_id\": \"ee4b3d01-8faa-49a1-86fb-8f9f6be67ee5\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Ingest Files",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files",
+									"description": "Files to be ingested",
+									"type": "file",
+									"src": "/Users/apple/Downloads/whistleblower-policy-ba-revised.pdf"
+								},
+								{
+									"key": "files",
+									"type": "file",
+									"src": "/Users/apple/Downloads/Files for AI Search/TechNote and Diligence.docx",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:7860/api/ingest/files",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7860",
+							"path": [
+								"api",
+								"ingest",
+								"files"
+							]
+						},
+						"description": "Upload and process multiple files"
+					},
+					"response": [
+						{
+							"name": "example1",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "files",
+											"description": "Files to be ingested",
+											"type": "file",
+											"src": "/Users/apple/Downloads/whistleblower-policy-ba-revised.pdf"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:7860/api/ingest/files",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7860",
+									"path": [
+										"api",
+										"ingest",
+										"files"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 23 Feb 2025 22:30:52 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "272"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"completed\",\n    \"results\": [\n        {\n            \"status\": \"success\",\n            \"filename\": \"whistleblower-policy-ba-revised.pdf\",\n            \"documentId\": \"8b4c6bb2-d9dc-431e-b871-36074d140a11\",\n            \"message\": \"Successfully ingested whistleblower-policy-ba-revised.pdf with ID: 8b4c6bb2-d9dc-431e-b871-36074d140a11\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Ingest Folder",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files",
+									"description": "Files from folder to be ingested",
+									"type": "file",
+									"src": [
+										"/Users/apple/Downloads/sample.json",
+										"/Users/apple/Downloads/whistleblower-policy-ba-revised.pdf"
+									]
+								},
+								{
+									"key": "",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:7860/api/ingest/folder",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7860",
+							"path": [
+								"api",
+								"ingest",
+								"folder"
+							]
+						},
+						"description": "Upload and process files from a folder"
+					},
+					"response": [
+						{
+							"name": "replace-same-filename",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "files",
+											"description": "Files from folder to be ingested",
+											"type": "file",
+											"src": [
+												"/Users/apple/Downloads/sample.json",
+												"/Users/apple/Downloads/whistleblower-policy-ba-revised.pdf"
+											]
+										},
+										{
+											"key": "",
+											"value": "",
+											"type": "text",
+											"disabled": true
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:7860/api/ingest/folder",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7860",
+									"path": [
+										"api",
+										"ingest",
+										"folder"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 23 Feb 2025 23:26:51 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "882"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"completed\",\n    \"results\": [\n        {\n            \"status\": \"info\",\n            \"filename\": \"sample.json\",\n            \"documentId\": \"75c1d156-7a2e-43d7-bc1d-85888b3dd3e8\",\n            \"message\": \"Replacing existing file sample.json (ID: 75c1d156-7a2e-43d7-bc1d-85888b3dd3e8)\"\n        },\n        {\n            \"status\": \"success\",\n            \"filename\": \"sample.json\",\n            \"documentId\": \"75c1d156-7a2e-43d7-bc1d-85888b3dd3e8\",\n            \"message\": \"Successfully ingested sample.json with ID: 75c1d156-7a2e-43d7-bc1d-85888b3dd3e8\"\n        },\n        {\n            \"status\": \"info\",\n            \"filename\": \"whistleblower-policy-ba-revised.pdf\",\n            \"documentId\": \"6154a02c-ca80-4e11-ba93-c8541e731411\",\n            \"message\": \"Replacing existing file whistleblower-policy-ba-revised.pdf (ID: 6154a02c-ca80-4e11-ba93-c8541e731411)\"\n        },\n        {\n            \"status\": \"success\",\n            \"filename\": \"whistleblower-policy-ba-revised.pdf\",\n            \"documentId\": \"6154a02c-ca80-4e11-ba93-c8541e731411\",\n            \"message\": \"Successfully ingested whistleblower-policy-ba-revised.pdf with ID: 6154a02c-ca80-4e11-ba93-c8541e731411\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Multiple Documents",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"documentIds\": [\"46509da3-a01a-4860-a944-7d9f4ed26c33\", \"ba22fb3e-938a-4952-9841-7a7612564da7\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:7860/api/del_docs",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7860",
+							"path": [
+								"api",
+								"del_docs"
+							]
+						},
+						"description": "Delete multiple documents by their IDs"
+					},
+					"response": [
+						{
+							"name": "example1",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"documentIds\": [\"46509da3-a01a-4860-a944-7d9f4ed26c33\", \"ba22fb3e-938a-4952-9841-7a7612564da7\"]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:7860/api/del_docs",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7860",
+									"path": [
+										"api",
+										"del_docs"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 23 Feb 2025 22:28:11 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "366"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"completed\",\n    \"results\": [\n        {\n            \"status\": \"success\",\n            \"documentId\": \"46509da3-a01a-4860-a944-7d9f4ed26c33\",\n            \"message\": \"Successfully deleted sample.json (ID: 46509da3-a01a-4860-a944-7d9f4ed26c33)\"\n        },\n        {\n            \"status\": \"success\",\n            \"documentId\": \"ba22fb3e-938a-4952-9841-7a7612564da7\",\n            \"message\": \"Successfully deleted Receipt-2028-2159.pdf (ID: ba22fb3e-938a-4952-9841-7a7612564da7)\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete All Documents",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:7860/api/documents/all",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7860",
+							"path": [
+								"api",
+								"documents",
+								"all"
+							]
+						},
+						"description": "Delete all ingested documents"
+					},
+					"response": [
+						{
+							"name": "example1",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:7860/api/documents/all",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7860",
+									"path": [
+										"api",
+										"documents",
+										"all"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 23 Feb 2025 23:21:47 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "321"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"message\": \"Deletion results:\\nSuccessfully deleted whistleblower-policy-ba-revised.pdf (ID: 8b4c6bb2-d9dc-431e-b871-36074d140a11)\\nSuccessfully deleted sample.json (ID: 575865d2-9673-437d-9c47-f54d8b3a8202)\\nSuccessfully deleted TechNote and Diligence.docx (ID: 58bd3336-d861-4398-a7b3-56dd79cb60d6)\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Search and Chat",
+			"item": [
+				{
+					"name": "Search Documents",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"What is the whistleblower policy?\",\n    \"documentIds\": [\"8b4c6bb2-d9dc-431e-b871-36074d140a11\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:7860/api/search",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7860",
+							"path": [
+								"api",
+								"search"
+							]
+						},
+						"description": "Search through documents with a query, optionally filtered by document IDs"
+					},
+					"response": [
+						{
+							"name": "example1",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"query\": \"What is the whistleblower policy?\",\n    \"documentIds\": []\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:7860/api/search",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7860",
+									"path": [
+										"api",
+										"search"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 23 Feb 2025 23:02:58 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "1581"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"answer\": \"Based on the provided context chunks, the whistleblower policy for Business Associates includes protection for those who make protected disclosures in good faith regarding illegal gratification or unethical activities. The policy ensures that the identity of the Business Associate Whistleblower remains confidential and establishes an Ethics Committee to address grievances and investigate reported concerns. Additionally, the policy outlines that abuse of this protection by Business Associates may lead to disciplinary action.\",\n    \"sources\": [\n        {\n            \"filename\": \"whistleblower-policy-ba-revised.pdf\",\n            \"documentId\": \"8b4c6bb2-d9dc-431e-b871-36074d140a11\",\n            \"pages\": [\n                1\n            ],\n            \"heading\": \"['Whistle Blower Policy for Business Associates']\",\n            \"chunkIndex\": 1,\n            \"score\": 0.9616855382919312\n        },\n        {\n            \"filename\": \"whistleblower-policy-ba-revised.pdf\",\n            \"documentId\": \"8b4c6bb2-d9dc-431e-b871-36074d140a11\",\n            \"pages\": [\n                3\n            ],\n            \"heading\": \"['TATA STEEL LIMITED']\",\n            \"chunkIndex\": 5,\n            \"score\": 0.8253074884414673\n        },\n        {\n            \"filename\": \"whistleblower-policy-ba-revised.pdf\",\n            \"documentId\": \"8b4c6bb2-d9dc-431e-b871-36074d140a11\",\n            \"pages\": [\n                3\n            ],\n            \"heading\": \"['Business Associate Whistle Blower Protection:']\",\n            \"chunkIndex\": 7,\n            \"score\": 0.7772645950317383\n        },\n        {\n            \"filename\": \"whistleblower-policy-ba-revised.pdf\",\n            \"documentId\": \"8b4c6bb2-d9dc-431e-b871-36074d140a11\",\n            \"pages\": [\n                1\n            ],\n            \"heading\": \"['Definitions:']\",\n            \"chunkIndex\": 2,\n            \"score\": 0.7724461555480957\n        },\n        {\n            \"filename\": \"whistleblower-policy-ba-revised.pdf\",\n            \"documentId\": \"8b4c6bb2-d9dc-431e-b871-36074d140a11\",\n            \"pages\": [\n                3\n            ],\n            \"heading\": \"['Disqualifications:']\",\n            \"chunkIndex\": 6,\n            \"score\": 0.7710203528404236\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Start Chat",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"Tell me about the policy\",\n    \"documentIds\": [\"8b4c6bb2-d9dc-431e-b871-36074d140a11\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:7860/api/chat/start",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7860",
+							"path": [
+								"api",
+								"chat",
+								"start"
+							]
+						},
+						"description": "Start a new chat conversation"
+					},
+					"response": [
+						{
+							"name": "example1",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"query\": \"Tell me about the policy\",\n    \"documentIds\": [\"8b4c6bb2-d9dc-431e-b871-36074d140a11\"]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:7860/api/chat/start",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7860",
+									"path": [
+										"api",
+										"chat",
+										"start"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 23 Feb 2025 23:11:14 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "750"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"conversationId\": \"aef867cc-e74a-4dc1-a6f9-8bc420435d3e\",\n    \"answer\": \"Based on the provided context chunks, the policy being referred to is the \\\"Whistle Blower Policy for Business Associates\\\" developed by Tata Steel Limited. The policy aims to protect Business Associates who report unethical acts by providing a mechanism for reporting grievances and ensuring investigation and appropriate action by the Ethics Committee. The company reserves the right to amend or modify the policy at any time without providing a reason. The Chief Ethics Counsellor is responsible for ensuring that an approved copy of the policy and any subsequent amendments are hosted on the Tata Steel website for the information of all Business Associates.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Continue Chat",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"conversationId\": \"aef867cc-e74a-4dc1-a6f9-8bc420435d3e\",\n    \"query\": \"What question i have asked to you till now?\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:7860/api/chat/continue",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7860",
+							"path": [
+								"api",
+								"chat",
+								"continue"
+							]
+						},
+						"description": "Continue an existing chat conversation"
+					},
+					"response": [
+						{
+							"name": "example1",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"conversationId\": \"aef867cc-e74a-4dc1-a6f9-8bc420435d3e\",\n    \"query\": \"WHAT SHOULD Chief Ethics Counsellor shall ensure?\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:7860/api/chat/continue",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7860",
+									"path": [
+										"api",
+										"chat",
+										"continue"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 23 Feb 2025 23:12:55 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "237"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"answer\": \"The Chief Ethics Counsellor shall ensure that an approved copy of the Whistleblower Policy and its subsequent amendments are hosted on the Tata Steel website for the information of all Business Associates.\"\n}"
+						},
+						{
+							"name": "example2fromexample1",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"conversationId\": \"aef867cc-e74a-4dc1-a6f9-8bc420435d3e\",\n    \"query\": \"What question i have asked to you till now?\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:7860/api/chat/continue",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "7860",
+									"path": [
+										"api",
+										"chat",
+										"continue"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 23 Feb 2025 23:18:59 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "121"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"answer\": \"1. \\\"WHAT SHOULD Chief Ethics Counsellor shall ensure?\\\"\\n2. \\\"Tell me about the policy\\\"\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Chat History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:7860/api/chat/aef867cc-e74a-4dc1-a6f9-8bc420435d3e/history",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7860",
+							"path": [
+								"api",
+								"chat",
+								"aef867cc-e74a-4dc1-a6f9-8bc420435d3e",
+								"history"
+							]
+						},
+						"description": "Get the history of a specific chat conversation"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Chat",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:7860/api/chat/aef867cc-e74a-4dc1-a6f9-8bc420435d3e",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "7860",
+							"path": [
+								"api",
+								"chat",
+								"aef867cc-e74a-4dc1-a6f9-8bc420435d3e"
+							]
+						},
+						"description": "Delete a specific chat conversation"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

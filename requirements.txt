@@ -1,0 +1,15 @@
+openai
+weaviate-client>=4.0.0
+gradio
+docling~=2.7.0
+python-dotenv
+langchain
+tiktoken
+torch
+rich
+fastapi
+uvicorn
+pandas
+python-multipart
+httpx
+websockets 
