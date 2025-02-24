@@ -10,6 +10,7 @@ import logging
 import uuid
 from conversation_store import ConversationStore
 import pandas as pd
+from interpreter import interpreter
 
 # Configure logging
 logging.basicConfig(
@@ -45,6 +46,57 @@ app.add_middleware(
 )
 
 conversation_store = ConversationStore()
+
+# Initialize OpenInterpreter
+interpreter.auto_run = True  # Enable automatic mode (-y)
+interpreter.model = "gpt-4"  # Use GPT-4
+interpreter.context_window = 8192  # Set context window
+interpreter.max_tokens = 4096  # Set max tokens
+interpreter.offline = False  # Ensure online mode
+interpreter.system_message = """
+You are a friendly JSON data analyst chatbot. Your task is to analyze JSON files and provide accurate, clear answers in a conversational way.
+
+Key requirements:
+1. IMPORTANT: You can ONLY work with JSON files. If a file is not JSON, politely explain this limitation.
+2. Response Types:
+   a. For greetings or casual interactions (hi, hello, thanks, etc.):
+      - Respond naturally and conversationally
+      - Mention that you're a JSON Analysis Assistant
+      - Ask how you can help with JSON data analysis
+   b. For JSON analysis queries:
+      - ALWAYS use the absolute file paths provided to read JSON files directly
+      - DO NOT copy or paste JSON content inline - only use file paths
+      - First examine and understand the complete structure of the JSON data
+      - Only then proceed with the specific analysis requested
+3. When analyzing JSON structure:
+   - Use Python's json module to load the file directly from disk
+   - Identify if it's an array or object at root level
+   - Map out all available keys and their data types
+   - Understand the nesting levels and relationships
+   - Document any patterns in the data structure
+4. Format your response in a clear, professional manner:
+   - For analysis results: Start with "The analysis of the JSON file reveals that..."
+   - For greetings/casual chat: Start conversationally but always tie back to JSON analysis
+   - Present findings conversationally
+   - Include specific numbers and statistics
+   - Avoid technical details or code snippets in the output
+5. Run all commands with -y flag
+6. Focus on accuracy - double-check your calculations
+7. Only respond with the final analysis, not intermediate steps
+8. Always maintain context of the full JSON structure throughout the conversation
+9. After initial file analysis, use the cached understanding for follow-up questions
+10. Provide concise answers in simple sentences without explanations unless specifically asked
+
+Example good responses:
+For greeting: "👋 Hello! I'm your JSON Analysis Assistant. I can help you understand and analyze your JSON data. What would you like to know about your JSON files?"
+
+For analysis: "there are 50 customers in total. I've looked through the entire dataset and noticed that each customer has contact information and purchase history. Would you like to know more about any specific aspect?"
+
+Example bad response:
+"Loading file...
+data = json.load(file)
+Found 50 customers"
+"""
 
 def save_uploaded_file(file, folder="documents"):
     """Save uploaded file to documents folder and return the new path."""
@@ -778,6 +830,228 @@ def refresh_gradio_state():
         logger.error(f"Error refreshing Gradio state: {str(e)}")
         return []
 
+def execute_code_with_context(query: str, doc_ids: list = None):
+    """Execute code with document context using OpenInterpreter."""
+    try:
+        # Get query embedding for search
+        response = openai_client.embeddings.create(
+            input=query,
+            model="text-embedding-3-small"
+        )
+        query_embedding = response.data[0].embedding
+
+        # Build query filter for multiple document IDs
+        query_filter = None
+        if doc_ids:
+            query_filter = wvc.query.Filter.by_property("documentId").contains_any(doc_ids)
+
+        # Search in Weaviate
+        results = collection.query.hybrid(
+            query=query,
+            vector=query_embedding,
+            alpha=0.5,
+            filters=query_filter,
+            limit=20,
+            return_properties=["text", "documentId", "filename", "chunkIndex", "metadata"],
+            return_metadata=wvc.query.MetadataQuery(score=True)
+        ).objects
+
+        if not results:
+            return "No relevant JSON files found. Please provide a JSON file to analyze."
+
+        # Get unique sources with their best scores
+        unique_sources = {}
+        for obj in results:
+            props = obj.properties
+            filename = props['filename']
+            score = obj.metadata.score if hasattr(obj.metadata, 'score') else 0
+            
+            if filename not in unique_sources or score > unique_sources[filename]['score']:
+                unique_sources[filename] = {
+                    'score': score,
+                    'filename': filename
+                }
+
+        # Sort by score and get top 2 unique sources
+        top_sources = sorted(
+            unique_sources.items(), 
+            key=lambda x: x[1]['score'], 
+            reverse=True
+        )[:2]
+
+        # Get just the filenames that are JSON files and analyze their structure
+        json_files = []
+        file_structures = []
+        
+        for filename, info in top_sources:
+            if filename.lower().endswith('.json'):
+                file_path = os.path.abspath(os.path.join("documents", filename))
+                if os.path.exists(file_path):
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            # Read first 10 lines
+                            head_lines = []
+                            for _ in range(10):
+                                line = f.readline()
+                                if not line:
+                                    break
+                                head_lines.append(line)
+                            
+                            # Get file size and seek to end for last 10 lines
+                            f.seek(0, 2)
+                            file_size = f.tell()
+                            
+                            # Store file info
+                            json_files.append(file_path)
+                            file_structures.append({
+                                'filename': filename,
+                                'path': file_path,
+                                'size': file_size,
+                                'head': ''.join(head_lines),
+                                'structure_analyzed': True
+                            })
+                            
+                            # Only read tail if file is large enough
+                            if file_size > 1000:  # Skip for small files
+                                f.seek(max(file_size - 1000, 0))  # Go to last 1000 bytes
+                                tail_content = f.read()
+                                tail_lines = tail_content.split('\n')[-10:]  # Get last 10 lines
+                                file_structures[-1]['tail'] = '\n'.join(tail_lines)
+                    except Exception as e:
+                        logger.error(f"Error analyzing {filename}: {str(e)}")
+                        continue
+
+        if not json_files:
+            return "No valid JSON files found. Please provide a JSON file to analyze."
+
+        # Create the query message with file paths and structure information
+        context_message = f"""Analyzing the following JSON files for query: "{query}"
+
+File Structure Summary:"""
+
+        for structure in file_structures:
+            context_message += f"""
+
+File: {structure['filename']} (Size: {structure['size']} bytes)
+Top portion:
+{structure['head']}
+"""
+            if 'tail' in structure:
+                context_message += f"""
+Bottom portion:
+{structure['tail']}
+"""
+
+        context_message += "\n\nFiles to analyze:\n"
+        for file_path in json_files:
+            context_message += f"{file_path}\n"
+
+        # Run interpreter with context and get output
+        output_buffer = []
+        final_analysis = None
+
+        for chunk in interpreter.chat(context_message, stream=True):
+            if isinstance(chunk, dict):
+                content = chunk.get('content', '')
+                # Extract only the final analysis message from assistant
+                if content and chunk.get('role') == 'assistant' and chunk.get('type') == 'message':
+                    if 'The analysis' in content:
+                        final_analysis = content
+                    else:
+                        output_buffer.append(content)
+            elif chunk is not None and not isinstance(chunk, dict):
+                # Handle non-dictionary output
+                if 'The analysis' in str(chunk):
+                    final_analysis = str(chunk)
+                else:
+                    output_buffer.append(str(chunk))
+        
+        # If we have a final analysis, use it. Otherwise, try to construct one from the buffer
+        if final_analysis:
+            result = final_analysis
+        elif output_buffer:
+            # Join all output lines and format them
+            result = "\n".join(line for line in output_buffer if not isinstance(line, dict))
+            if not result.startswith("The analysis"):
+                result = f"{result}"
+
+        return result
+    except Exception as e:
+        logger.error(f"Error in code execution: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
+def format_interpreter_response(query, response, file_paths=None):
+    """Format interpreter response to be concise and natural"""
+    try:
+        # Handle different response types
+        if isinstance(response, dict):
+            # Extract content from dictionary if it's in the expected format
+            if 'content' in response:
+                content = response['content']
+            else:
+                # If it's a different dictionary format, convert it to string
+                content = str(response)
+        elif isinstance(response, list):
+            content = ' '.join(str(item) for item in response if not isinstance(item, dict))
+        else:
+            content = str(response)
+        
+        # Clean up the response
+        # Replace multiple newlines with single newline
+        content = ' '.join(line.strip() for line in content.split('\n') if line.strip())
+        
+        # Ensure response starts with "The analysis" if it doesn't already
+        if not content.startswith("The analysis"):
+            content = f"{content}"
+        
+        # Add file summary if files are provided
+        if file_paths:
+            content += f"\n\nAnalysis based on {len(file_paths)} JSON file(s):\n"
+            content += '\n'.join(f"- {os.path.basename(f)}" for f in file_paths)
+        
+        # Ensure proper spacing and formatting
+        content = content.replace("  ", " ")  # Remove double spaces
+        content = content.replace(" ,", ",")  # Fix spacing around commas
+        content = content.replace(" .", ".")   # Fix spacing around periods
+        
+        return content
+    except Exception as e:
+        logger.error(f"Error formatting interpreter response: {str(e)}")
+        return str(response)  # Return raw response as fallback
+
+# Clear chat context when "New Analysis" is clicked
+def clear_analysis_chat():
+    """Clear the analysis chat history and context."""
+    if hasattr(handle_analysis_chat, 'current_json_files'):
+        del handle_analysis_chat.current_json_files
+    if hasattr(handle_analysis_chat, 'has_initial_analysis'):
+        del handle_analysis_chat.has_initial_analysis
+    return None
+
+def handle_analysis_chat(query, doc_ids_str=None, history=None):
+    """Handle chat messages in the analysis tab."""
+    try:
+        if not query:
+            return history, ""
+            
+        # Convert doc_ids string to list if provided
+        doc_ids = doc_ids_str.split(',') if doc_ids_str else None
+        
+        # Execute code with context
+        result = execute_code_with_context(query, doc_ids)
+        
+        # Format the response
+        formatted_response = format_interpreter_response(query, result, doc_ids)
+        
+        # Update history
+        history = history or []
+        history.append((query, formatted_response))
+        
+        return history, ""  # Clear input after sending
+    except Exception as e:
+        logger.error(f"Error in analysis chat: {str(e)}")
+        return history, ""
+
 # Create Gradio interface
 with gr.Blocks() as demo:
     gr.Markdown("# Document Processing System")
@@ -852,6 +1126,55 @@ with gr.Blocks() as demo:
         query_output = gr.Textbox(label="Results")
         query_button = gr.Button("Search")
         query_button.click(query_documents, inputs=[query_input, doc_id_input, limit_input], outputs=[query_output])
+
+    with gr.Tab("Code Executor"):
+        gr.Markdown("""# JSON Analysis Chat 🤖
+
+
+**Important: I currently only support JSON files.**
+
+
+Example questions:
+- "What's the structure of this JSON file?"
+- "How many customers are there in total?"
+- "Tell me about the user demographics"
+- "What fields are available for each product?"
+
+💡 Tip: You can specify document IDs if you want to analyze specific files.""")
+
+        # Create a chat-like interface similar to the Chat tab
+        conversation_id = gr.State(value=None)
+        
+        with gr.Row():
+            with gr.Column(scale=3):
+                chat_history = gr.Chatbot(label="Analysis Chat History", height=400)
+                with gr.Row():
+                    executor_query = gr.Textbox(
+                        label="Chat with your JSON Assistant",
+                        placeholder="Ask me anything about your JSON data...",
+                        lines=2,
+                        value=""  # Ensure empty value after sending
+                    )
+                    executor_doc_ids = gr.Textbox(
+                        label="Optional: Specific Document IDs",
+                        placeholder="doc1,doc2,...",
+                        lines=2
+                    )
+                with gr.Row():
+                    chat_button = gr.Button("Send", variant="primary")
+                    clear_button = gr.Button("New Analysis", variant="secondary")
+
+        # Set up event handlers
+        chat_button.click(
+            fn=handle_analysis_chat,
+            inputs=[executor_query, executor_doc_ids, chat_history],
+            outputs=[chat_history, executor_query],
+        )
+        
+        clear_button.click(
+            fn=clear_analysis_chat,
+            outputs=[chat_history]
+        )
 
     with gr.Tab("Chat"):
         conversation_id = gr.State(value=None)
@@ -1337,6 +1660,27 @@ async def delete_chat(conversation_id: str):
             return {"status": "error", "message": "Failed to delete conversation"}
     except Exception as e:
         logger.error(f"Error deleting chat: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/execute")
+async def execute_code(request: Request):
+    """Execute code with document context."""
+    try:
+        data = await request.json()
+        query = data.get("query")
+        doc_ids = data.get("documentIds", [])  # Optional array of document IDs
+        
+        if not query:
+            return {"status": "error", "message": "Query is required"}
+            
+        result = execute_code_with_context(query, doc_ids)
+        
+        return {
+            "status": "success",
+            "result": result
+        }
+    except Exception as e:
+        logger.error(f"Error in code execution: {str(e)}")
         return {"status": "error", "message": str(e)}
 
 if __name__ == "__main__":
