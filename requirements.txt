@@ -13,4 +13,4 @@ pandas
 python-multipart
 httpx
 websockets
-open-interpreter 
+open-interpreter
