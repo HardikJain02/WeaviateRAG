@@ -2,6 +2,13 @@
 
 A powerful Retrieval Augmented Generation (RAG) system built with Weaviate, FastAPI, Docling, and OpenAI. This system provides both a web UI (using Gradio) and REST API endpoints for document processing, semantic search, and conversational AI capabilities.
 
+Code Executor (RAG-enabled)
+<img width="1237" alt="image" src="https://github.com/user-attachments/assets/b83c29fc-e53c-4864-b1ce-8fdf3fa65750" />
+
+<img width="1241" alt="image" src="https://github.com/user-attachments/assets/2d6906d2-6220-410f-a2be-ca26d5c8d9d8" />
+
+
+
 ## Features
 
 ### Document Processing
@@ -172,7 +179,7 @@ Core dependencies:
 - `openai` - OpenAI API client
 - `weaviate-client>=4.0.0` - Weaviate vector database client
 - `gradio` - Web UI framework
-- `docling=2.24.0` - Document processing
+- `docling==2.24.0` - Document processing
 - `python-dotenv` - Environment management
 - `langchain` - LLM framework
 - `tiktoken` - OpenAI tokenizer
@@ -314,8 +321,73 @@ Content:
 - Automatic handling of document updates and versioning
 - OCR processing optimized for speed and accuracy
 
+
+## Code Executor [No API, only UI]
+
+The Code Executor is a powerful feature that provides intelligent JSON analysis capabilities. It allows you to interact with your JSON data through natural language queries and get detailed insights.
+
+### Features
+
+- **Smart JSON Analysis**: Automatically analyzes JSON structure and content
+- **Multi-file Support**: Can analyze multiple JSON files simultaneously
+- **Natural Language Interface**: Ask questions in plain English
+- **Context-Aware**: Maintains context between queries for follow-up questions
+- **Selective Analysis**: Optionally specify document IDs for targeted analysis
+
+### Example Usage
+
+1. Open the "Code Executor" tab in the interface
+2. Type your query in natural language, for example:
+   - "What's the structure of this JSON file?"
+   - "How many customers are there in total?"
+   - "Tell me about the user demographics"
+   - "What fields are available for each product?"
+3. Optionally specify document IDs if you want to analyze specific files
+4. Click "Send" to get your analysis
+
+### Technical Details
+
+- Uses GPT-4 for analysis
+- Employs semantic search to find relevant JSON files
+- Maintains conversation history for context
+- Supports both high-level analysis and detailed data exploration
+- Automatically formats responses for readability
+
+### How It Works
+
+1. **Query Processing**:
+   - When you submit a query, it's converted into embeddings using OpenAI's text-embedding-3-small model
+   - The system performs a hybrid search (combining semantic and keyword matching) in Weaviate
+   - Top 2 most relevant unique JSON files are selected based on relevance scores
+
+2. **File Analysis**:
+   - For each selected JSON file:
+     - Reads the complete file structure
+     - Always analyzes first 10 lines for header context
+     - For files larger than 1000 bytes, analyzes last 10 lines for additional context
+     - Validates JSON format and structure
+     - Creates a comprehensive file summary
+
+3. **Context Building**:
+   - Combines file summaries into a structured context
+   - Includes file sizes, structure information, and relevant sections
+   - Maintains previous conversation context for follow-up questions
+
+4. **Execution Flow**:
+   - OpenInterpreter (powered by GPT-4) processes the query with context
+   - Analysis is performed directly on the JSON files using Python's json module
+
+5. **Response Formatting**:
+   - Results are formatted for readability
+   - Includes relevant statistics and data points
+   - References specific files used in the analysis
+
+
+
 ## Notable Points
 
 - I can easily host it on any virtual machine- but i do not have availability.
 - Automation: Monitors for new document uploads- this can be easily done but in my case when user hits process files i know i gotta upload right away- but when we are using s3 bucket/gcs bucket, we can setup a watcher for new folder/file or can directly trigger just like i did.
 -Reranker can be added to the retrieved chunks to improve the quality of the final results.
+
+For any queries, feel free to reach out to me at jainh445@gmail.com
